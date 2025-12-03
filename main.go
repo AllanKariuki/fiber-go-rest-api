@@ -76,7 +76,7 @@ func transferFunds(db *gorm.DB, fromId uuid.UUID, toId uuid.UUID, amount int) er
 func printBalance(db *gorm.DB) {
 	var accounts []Account
 	db.Find(&accounts)
-	fmt.Printf("Balance ar '%s:\n", time.Now())
+	fmt.Printf("Balance at '%s:\n", time.Now())
 	for _, account := range accounts {
 		fmt.Printf("%s %d\n", account.ID, account.Balance)
 	}
