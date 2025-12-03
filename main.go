@@ -1,25 +1,25 @@
 package main
 
 import (
-	"fmt"
 	"context"
-    "log"
-    "math/rand"
-    "os"
-    "time"
+	"fmt"
+	"log"
+	"math/rand"
+	"os"
+	"time"
 
-    "github.com/cockroachdb/cockroach-go/v2/crdb/crdbgorm"
-    "github.com/google/uuid"
-    "gorm.io/driver/postgres"
-    "gorm.io/gorm"
-
+	"github.com/cockroachdb/cockroach-go/v2/crdb/crdbgorm"
+	"github.com/google/uuid"
+	"github.com/joho/godotenv"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 	// "github.com/gofiber/fiber/v2/middleware/logger"
 	// "github.com/gofiber/fiber/v2/middleware/recover"
 	// "log"
 )
 
 type Account struct {
-	ID uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4()"`
+	ID      uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4()"`
 	Balance int
 }
 
@@ -94,8 +94,14 @@ func deleteAccounts(db *gorm.DB, accountIDs []uuid.UUID) error {
 }
 
 func main() {
+	// Load .env file
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found")
+	}
+
 	fmt.Println("Hello this is a rest api")
-	db, err := gorm.Open(postgres.Open(os.Getenv("DATABASE_URL")+"&application_name=$ docs_simplecrud_gorm"), &gorm.Config{})
+	fmt.Printf("DATABASE_URL: %s\n", os.Getenv("DATABASE_URL"))
+	db, err := gorm.Open(postgres.Open(os.Getenv("DATABASE_URL")+"&application_name=docs_simplecrud_gorm"), &gorm.Config{})
 
 	if err != nil {
 		log.Fatal(err)
@@ -134,10 +140,10 @@ func main() {
 	fromID := acctIDs[0]
 	toID := acctIDs[0:][rand.Intn(len(acctIDs))]
 
-	// Transfer funds between accounts. To handle potential 
+	// Transfer funds between accounts. To handle potential
 	// transaction retry errors, we wrap the call to 'trnasferFunds' in `crdbgorm.ExecuteTx`
 
-	if err := crdbgorm.ExecuteTx(context.Background(), db, nil, 
+	if err := crdbgorm.ExecuteTx(context.Background(), db, nil,
 		func(tx *gorm.DB) error {
 			return transferFunds(tx, fromID, toID, transferAmt)
 		},
@@ -152,7 +158,7 @@ func main() {
 	// To handle potential transaction retry errors, we wrap the call
 	// to `deleteAccounts` in `crdbgorm.ExecuteTx`
 	if err := crdbgorm.ExecuteTx(context.Background(), db, nil,
-		func (tx *gorm.DB) error {
+		func(tx *gorm.DB) error {
 			return deleteAccounts(db, acctIDs)
 		},
 	); err != nil {
